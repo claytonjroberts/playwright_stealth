@@ -3,9 +3,7 @@ generateFunctionMocks = (proto, itemMainProp, dataArray) => ({
     apply(target, ctx, args) {
       if (!args.length) {
         throw new TypeError(
-          `Failed to execute 'item' on '${
-            proto[Symbol.toStringTag]
-          }': 1 argument required, but only 0 present.`
+          `Failed to execute 'item' on '${proto[Symbol.toStringTag]}': 1 argument required, but only 0 present.`
         );
       }
       // Special behavior alert:
@@ -21,9 +19,7 @@ generateFunctionMocks = (proto, itemMainProp, dataArray) => ({
     apply(target, ctx, args) {
       if (!args.length) {
         throw new TypeError(
-          `Failed to execute 'namedItem' on '${
-            proto[Symbol.toStringTag]
-          }': 1 argument required, but only 0 present.`
+          `Failed to execute 'namedItem' on '${proto[Symbol.toStringTag]}': 1 argument required, but only 0 present.`
         );
       }
       return dataArray.find((mt) => mt[itemMainProp] === args[0]) || null; // Not `undefined`!

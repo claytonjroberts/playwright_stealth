@@ -1,10 +1,6 @@
-import asyncio
-import logging
-
 import pytest
-from playwright import sync_api
 from playwright.async_api import async_playwright
-from playwright.sync_api import sync_playwright, Browser
+from playwright.sync_api import sync_playwright
 
 from playwright_stealth.stealth import Stealth, ALL_EVASIONS_DISABLED_KWARGS
 
@@ -43,6 +39,7 @@ def test_sync_navigator_webdriver_smoketest(hooked_sync_browser):
 def test_payload_is_empty_when_no_evasions_active():
     assert len(Stealth(**ALL_EVASIONS_DISABLED_KWARGS).script_payload) == 0
 
+
 def test_empty_payload_not_injected():
     init_script_added = False
 
@@ -54,5 +51,3 @@ def test_empty_payload_not_injected():
     # noinspection PyTypeChecker
     Stealth(**ALL_EVASIONS_DISABLED_KWARGS).apply_stealth_sync(MockBrowser())
     assert not init_script_added
-
-

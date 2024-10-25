@@ -10,7 +10,10 @@ from typing import Dict, List, Union, Any
 
 from playwright import async_api, sync_api
 
-from playwright_stealth.context_managers import AsyncWrappingContextManager, SyncWrappingContextManager
+from playwright_stealth.context_managers import (
+    AsyncWrappingContextManager,
+    SyncWrappingContextManager,
+)
 
 
 def from_file(name) -> str:
@@ -60,32 +63,32 @@ class Stealth:
     """
 
     def __init__(
-            self,
-            navigator_webdriver: bool = True,
-            webgl_vendor: bool = True,
-            chrome_app: bool = True,
-            chrome_csi: bool = True,
-            chrome_load_times: bool = True,
-            chrome_runtime: bool = False,
-            iframe_content_window: bool = True,
-            media_codecs: bool = True,
-            navigator_hardware_concurrency: bool = True,
-            navigator_languages: bool = True,
-            navigator_permissions: bool = True,
-            navigator_platform: bool = True,
-            navigator_plugins: bool = True,
-            navigator_user_agent: bool = True,
-            navigator_vendor: bool = True,
-            hairline: bool = True,
-            webgl_vendor_override: str = "Intel Inc.",
-            webgl_renderer_override: str = "Intel Iris OpenGL Engine",
-            navigator_vendor_override: str = "Google Inc.",
-            navigator_user_agent_override: Optional[str] = None,
-            navigator_platform_override: Optional[str] = None,
-            navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
-            chrome_runtime_run_on_insecure_origins: bool = False,
-            init_scripts_only: bool = False,
-            script_logging: bool = False,
+        self,
+        navigator_webdriver: bool = True,
+        webgl_vendor: bool = True,
+        chrome_app: bool = True,
+        chrome_csi: bool = True,
+        chrome_load_times: bool = True,
+        chrome_runtime: bool = False,
+        iframe_content_window: bool = True,
+        media_codecs: bool = True,
+        navigator_hardware_concurrency: bool = True,
+        navigator_languages: bool = True,
+        navigator_permissions: bool = True,
+        navigator_platform: bool = True,
+        navigator_plugins: bool = True,
+        navigator_user_agent: bool = True,
+        navigator_vendor: bool = True,
+        hairline: bool = True,
+        webgl_vendor_override: str = "Intel Inc.",
+        webgl_renderer_override: str = "Intel Iris OpenGL Engine",
+        navigator_vendor_override: str = "Google Inc.",
+        navigator_user_agent_override: Optional[str] = None,
+        navigator_platform_override: Optional[str] = None,
+        navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
+        chrome_runtime_run_on_insecure_origins: bool = False,
+        init_scripts_only: bool = False,
+        script_logging: bool = False,
     ):
         # scripts to load
         self.navigator_webdriver: bool = navigator_webdriver
@@ -216,8 +219,9 @@ class Stealth:
         if len(self.script_payload) > 0:
             page_or_context.add_init_script(self.script_payload)
 
-    def _kwargs_with_patched_cli_arg(self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool) -> \
-            Dict[str, Any]:
+    def _kwargs_with_patched_cli_arg(
+        self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool
+    ) -> Dict[str, Any]:
         signature = inspect.signature(method).parameters
         args_parameter = signature.get("args")
 
@@ -241,14 +245,20 @@ class Stealth:
         """
         for browser_type in (ctx.chromium, ctx.firefox, ctx.webkit):
             for name, method in inspect.getmembers(browser_type, predicate=inspect.ismethod):
-                if method.__annotations__.get('return') in ("Browser", "BrowserContext"):
+                if method.__annotations__.get("return") in (
+                    "Browser",
+                    "BrowserContext",
+                ):
                     chromium_mode = browser_type.name == "chromium"
                     method = self._generate_hooked_method_that_returns_browser(method, chromium_mode)
                     setattr(browser_type, name, method)
 
     def _generate_hooked_method_that_returns_browser(self, method: Callable, chromium_mode: bool):
         async def async_hooked_method(*args, **kwargs) -> Union[async_api.Browser, async_api.BrowserContext]:
-            browser_or_context = await method(*args, **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode))
+            browser_or_context = await method(
+                *args,
+                **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode),
+            )
             if isinstance(browser_or_context, async_api.BrowserContext):
                 context: async_api.BrowserContext = browser_or_context
                 context.new_page = self._generate_hooked_new_page(context.new_page)
@@ -262,7 +272,10 @@ class Stealth:
             return browser_or_context
 
         def sync_hooked_method(*args, **kwargs) -> Union[sync_api.Browser, sync_api.BrowserContext]:
-            browser_or_context = method(*args, **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode))
+            browser_or_context = method(
+                *args,
+                **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode),
+            )
             if isinstance(browser_or_context, sync_api.BrowserContext):
                 context: sync_api.BrowserContext = browser_or_context
                 context.new_page = self._generate_hooked_new_page(context.new_page)
@@ -343,9 +356,11 @@ class Stealth:
         for arg in existing_args:
             stripped_arg = arg.strip()
             if stripped_arg.startswith(switch_name):
-                warnings.warn("playwright-stealth is trying to modify a flag you have set yourself already."
-                              f"Either disable the mitigation or don't specify this flag manually {flag=}"
-                              f"to avoid this warning. playwright-stealth has overridden your flag")
+                warnings.warn(
+                    "playwright-stealth is trying to modify a flag you have set yourself already."
+                    f"Either disable the mitigation or don't specify this flag manually {flag=}"
+                    f"to avoid this warning. playwright-stealth has overridden your flag"
+                )
                 new_args.append(flag)
                 break
             else:

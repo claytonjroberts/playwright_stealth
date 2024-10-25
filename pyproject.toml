@@ -23,7 +23,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest", "pytest-asyncio"
+    "pytest", "pytest-asyncio", "black~=24.10.0"
 ]
 
 [project.urls]
@@ -33,3 +33,6 @@ Homepage = "https://github.com/Mattwmaster58/playwright_stealth"
 asyncio_mode="auto"
 asyncio_default_fixture_loop_scope="function"
 log_cli=true
+
+[tool.black]
+line-length=120
