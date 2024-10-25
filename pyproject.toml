@@ -23,8 +23,10 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest", "pytest-asyncio", "black~=24.10.0"
+    "pytest", "pytest-asyncio", 
 ]
+# psf/black runner will extract this, no other use
+lint = ["black~=24.8.0"]
 
 [project.urls]
 Homepage = "https://github.com/Mattwmaster58/playwright_stealth"
