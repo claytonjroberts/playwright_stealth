@@ -17,9 +17,7 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
 ]
-dependencies = [
-    "playwright", "typing-extensions"
-]
+dependencies = ["playwright"]
 
 [project.optional-dependencies]
 test = [
