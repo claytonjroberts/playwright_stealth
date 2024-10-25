@@ -6,6 +6,11 @@ This is a WIP fork, with the goal of replacing the out-of-date upstream.
 
 ## Install
 
+Install the latest stable release:
+```
+$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc1
+```
+or straight from `main`
 ```
 $ pip install git+https://github.com/Mattwmaster58/playwright_stealth
 ```
