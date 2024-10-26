@@ -1,5 +1,4 @@
 import playwright
-from filelock import AsyncUnixFileLock
 from playwright.async_api import async_playwright
 
 from playwright_stealth import Stealth
