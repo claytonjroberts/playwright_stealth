@@ -19,9 +19,9 @@ if (!("csi" in window.chrome) && window.performance?.timing) {
   log("loading chrome.csi.js");
   window.chrome.csi = function () {
     return {
-      onloadT: csi_timing.domContentLoadedEventEnd,
-      startE: csi_timing.navigationStart,
-      pageT: Date.now() - csi_timing.navigationStart,
+      onloadT: csi_timing?.domContentLoadedEventEnd,
+      startE: csi_timing?.navigationStart,
+      pageT: Date.now() - csi_timing?.navigationStart,
       tran: 15, // transition? seems constant
     };
   };
