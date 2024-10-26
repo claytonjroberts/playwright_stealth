@@ -8,7 +8,7 @@ This is a WIP fork, with the goal of replacing the out-of-date upstream.
 
 Install the latest stable release:
 ```
-$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc1
+$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc2
 ```
 or straight from `main`
 ```
