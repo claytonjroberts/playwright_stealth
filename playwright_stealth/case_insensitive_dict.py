@@ -72,6 +72,6 @@ class CaseInsensitiveDict(MutableMapping):
 
     def __repr__(self):
         return str(dict(self.items()))
-    
+
     def items(self):
         pass
