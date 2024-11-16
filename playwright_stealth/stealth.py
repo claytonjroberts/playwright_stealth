@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import inspect
 import json
+import random
 import re
 import warnings
 from collections.abc import Callable
 from copy import deepcopy
 from pathlib import Path
-from typing import Dict, List, Union, Any
+from typing import Dict, List, Union, Any, Tuple, Optional
 
 from playwright import async_api, sync_api
 
+from playwright_stealth.case_insensitive_dict import CaseInsensitiveDict
 from playwright_stealth.context_managers import (
     AsyncWrappingContextManager,
     SyncWrappingContextManager,
@@ -41,8 +43,6 @@ SCRIPTS: Dict[str, str] = {
     "webgl_vendor": from_file("evasions/webgl.vendor.js"),
 }
 
-from typing import Tuple, Optional
-
 
 class Stealth:
     """
@@ -64,12 +64,12 @@ class Stealth:
 
     def __init__(
         self,
-        navigator_webdriver: bool = True,
-        webgl_vendor: bool = True,
+        *,
         chrome_app: bool = True,
         chrome_csi: bool = True,
         chrome_load_times: bool = True,
         chrome_runtime: bool = False,
+        hairline: bool = True,
         iframe_content_window: bool = True,
         media_codecs: bool = True,
         navigator_hardware_concurrency: bool = True,
@@ -79,24 +79,25 @@ class Stealth:
         navigator_plugins: bool = True,
         navigator_user_agent: bool = True,
         navigator_vendor: bool = True,
-        hairline: bool = True,
-        webgl_vendor_override: str = "Intel Inc.",
-        webgl_renderer_override: str = "Intel Iris OpenGL Engine",
-        navigator_vendor_override: str = "Google Inc.",
-        navigator_user_agent_override: Optional[str] = None,
-        navigator_platform_override: Optional[str] = None,
-        navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
+        navigator_webdriver: bool = True,
+        sec_ch_ua: bool = True,
+        webgl_vendor: bool = True,
         chrome_runtime_run_on_insecure_origins: bool = False,
+        navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
+        navigator_platform_override: Optional[str] = None,
+        navigator_user_agent_override: Optional[str] = None,
+        navigator_vendor_override: str = "Google Inc.",
+        webgl_renderer_override: str = "Intel Iris OpenGL Engine",
+        webgl_vendor_override: str = "Intel Inc.",
         init_scripts_only: bool = False,
         script_logging: bool = False,
     ):
         # scripts to load
-        self.navigator_webdriver: bool = navigator_webdriver
-        self.webgl_vendor: bool = webgl_vendor
         self.chrome_app: bool = chrome_app
         self.chrome_csi: bool = chrome_csi
         self.chrome_load_times: bool = chrome_load_times
         self.chrome_runtime: bool = chrome_runtime
+        self.hairline: bool = hairline
         self.iframe_content_window: bool = iframe_content_window
         self.media_codecs: bool = media_codecs
         self.navigator_hardware_concurrency: int = navigator_hardware_concurrency
@@ -106,16 +107,20 @@ class Stealth:
         self.navigator_plugins: bool = navigator_plugins
         self.navigator_user_agent: bool = navigator_user_agent
         self.navigator_vendor: bool = navigator_vendor
-        self.hairline: bool = hairline
+        self.navigator_webdriver: bool = navigator_webdriver
+        self.sec_ch_ua: bool = sec_ch_ua
+        self.webgl_vendor: bool = webgl_vendor
 
-        # options
-        self.webgl_vendor_override: str = webgl_vendor_override
-        self.webgl_renderer_override: str = webgl_renderer_override
-        self.navigator_vendor_override: str = navigator_vendor_override
-        self.navigator_user_agent_override: Optional[str] = navigator_user_agent_override
-        self.navigator_platform_override: Optional[str] = navigator_platform_override
-        self.navigator_languages_override: Tuple[str, str] = navigator_languages_override
+        # evasion options
         self.chrome_runtime_run_on_insecure_origins: Optional[bool] = chrome_runtime_run_on_insecure_origins
+        self.navigator_languages_override: Tuple[str, str] = navigator_languages_override
+        self.navigator_platform_override: Optional[str] = navigator_platform_override
+        self.navigator_user_agent_override: Optional[str] = navigator_user_agent_override
+        self.navigator_vendor_override: str = navigator_vendor_override
+        self.sec_ch_ua_override: Optional[str] = sec_ch_ua_override
+        self.webgl_renderer_override: str = webgl_renderer_override
+        self.webgl_vendor_override: str = webgl_vendor_override
+        # other options
         self.init_scripts_only: bool = init_scripts_only
         self.script_logging = script_logging
 
@@ -259,16 +264,7 @@ class Stealth:
                 *args,
                 **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode),
             )
-            if isinstance(browser_or_context, async_api.BrowserContext):
-                context: async_api.BrowserContext = browser_or_context
-                context.new_page = self._generate_hooked_new_page(context.new_page)
-            elif isinstance(browser_or_context, async_api.Browser):
-                browser: async_api.Browser = browser_or_context
-                browser.new_page = self._generate_hooked_new_page(browser.new_page)
-                browser.new_context = self._generate_hooked_new_context(browser.new_context)
-            else:
-                raise TypeError(f"unexpected type from function (bug): {method.__name__} returned {browser_or_context}")
-
+            self._reassign_new_page_new_context(browser_or_context)
             return browser_or_context
 
         def sync_hooked_method(*args, **kwargs) -> Union[sync_api.Browser, sync_api.BrowserContext]:
@@ -276,16 +272,7 @@ class Stealth:
                 *args,
                 **self._kwargs_with_patched_cli_arg(method, kwargs, chromium_mode),
             )
-            if isinstance(browser_or_context, sync_api.BrowserContext):
-                context: sync_api.BrowserContext = browser_or_context
-                context.new_page = self._generate_hooked_new_page(context.new_page)
-            elif isinstance(browser_or_context, sync_api.Browser):
-                browser: sync_api.Browser = browser_or_context
-                browser.new_page = self._generate_hooked_new_page(browser.new_page)
-                browser.new_context = self._generate_hooked_new_context(browser.new_context)
-            else:
-                raise TypeError(f"unexpected type from function (bug): {method.__name__} returned {browser_or_context}")
-
+            self._reassign_new_page_new_context(browser_or_context)
             return browser_or_context
 
         if inspect.iscoroutinefunction(method):
@@ -309,24 +296,145 @@ class Stealth:
 
     def _generate_hooked_new_page(self, new_page_method: Callable) -> Callable:
         """
-        Returns a hooked method (async or sync) for new_page or new_context.
+        Returns a hooked method (async or sync) for new_page.
         *args and **kwargs even though these methods may not take any number of arguments,
         we want to preserve accurate stack traces when caller passes args improperly
         """
+        browser_instance = new_page_method.__self__
+        USER_AGENT_OVERRIDE_PIGGYBACK_KEY = "_stealth_user_agent"
+        SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY = "_stealth_sec_ch_ua"
+
+        async def get_user_agent_and_sec_ch_ua_async(page_method: Callable) -> Tuple[str, str]:
+            """
+            If there's no override, it's Chrome, and we haven't cached a UA value prior, we need to come up
+            with an accurate, non-headless UA ourselves. It's impossible to get UA without creating a temp page:
+              https://github.com/microsoft/playwright/issues/31743#issuecomment-2241550377
+            We can piggyback on the browser object to cache the UA - this way we don't
+
+            Returns:
+                user_agent, sec_ch_ua
+            """
+            temp_page: Optional[async_api.Page]
+            stealth_user_agent = getattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY)
+            sec_ch_ua = getattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY)
+            if stealth_user_agent is None or sec_ch_ua is None:
+                temp_page = await page_method()
+                stealth_user_agent = (await temp_page.evaluate("navigator.userAgent")).replace(
+                    "HeadlessChrome", "Chrome"
+                )
+                await temp_page.close(reason="playwright_stealth internal temp utility page")
+                sec_ch_ua = self._get_greased_chrome_sec_ua_ch(stealth_user_agent)
+                setattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY, sec_ch_ua)
+                setattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY, stealth_user_agent)
+            return stealth_user_agent, sec_ch_ua
+
+        def get_user_agent_and_sec_ch_ua_sync(page_method: Callable) -> Tuple[str, str]:
+            temp_page: Optional[sync_api.Page]
+            stealth_user_agent = getattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY)
+            sec_ch_ua = getattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY)
+            if stealth_user_agent is None or sec_ch_ua is None:
+                temp_page = page_method()
+                stealth_user_agent = temp_page.evaluate("navigator.userAgent").replace("HeadlessChrome", "Chrome")
+                sec_ch_ua = self._get_greased_chrome_sec_ua_ch(stealth_user_agent)
+                temp_page.close(reason="playwright_stealth internal temp utility page")
+                setattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY, sec_ch_ua)
+                setattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY, stealth_user_agent)
+            return stealth_user_agent, sec_ch_ua
 
         async def hooked_browser_method_async(*args, **kwargs):
-            page_or_context = await new_page_method(*args, **kwargs)
-            await self.apply_stealth_async(page_or_context)
-            return page_or_context
+            # respect any override the user passes themselves
+            if self.navigator_user_agent and kwargs.get("user_agent") is None:
+                user_agent_override = self.navigator_user_agent_override
+                if user_agent_override is None and browser_instance.browser_type == "chromium":
+                    user_agent_override, _ = await get_user_agent_and_sec_ch_ua_async(new_page_method)
+                kwargs["user_agent"] = self.navigator_user_agent_override
+
+            extra_http_headers = kwargs.get("extra_http_headers", {})
+            # respect any override the user passes themselves
+            if self.sec_ch_ua and CaseInsensitiveDict(extra_http_headers).get("sec-ch-ua") is None:
+                sec_ch_ua_override = self.sec_ch_ua_override
+                if sec_ch_ua_override is None and browser_instance.browser_type == "chromium":
+                    _, sec_ch_ua_override = await get_user_agent_and_sec_ch_ua_async(new_page_method)
+                if sec_ch_ua_override is not None:
+                    # this could be tricky is a differently cased key of the same thing exists,
+                    # but we have done a case-insensitive check above that precludes this
+                    extra_http_headers["sec-ch-ua"] = sec_ch_ua_override
+                    kwargs["extra_http_headers"] = extra_http_headers
+            page = await new_page_method(*args, **kwargs)
+            await self.apply_stealth_async(page)
+            return page
 
         def hooked_browser_method_sync(*args, **kwargs):
-            page_or_context = new_page_method(*args, **kwargs)
-            self.apply_stealth_sync(page_or_context)
-            return page_or_context
+            if self.navigator_user_agent and kwargs.get("user_agent") is None:
+                user_agent_override = self.navigator_user_agent_override
+                if user_agent_override is None and browser_instance.browser_type == "chromium":
+                    user_agent_override, _ = get_user_agent_and_sec_ch_ua_sync(new_page_method)
+                kwargs["user_agent"] = self.navigator_user_agent_override
+
+            extra_http_headers = kwargs.get("extra_http_headers", {})
+            if self.sec_ch_ua and CaseInsensitiveDict(extra_http_headers).get("sec-ch-ua") is None:
+                sec_ch_ua_override = self.sec_ch_ua_override
+                # respect any override the user has already made
+                if sec_ch_ua_override is None and browser_instance.browser_type == "chromium":
+                    _, sec_ch_ua_override = get_user_agent_and_sec_ch_ua_sync(new_page_method)
+                if sec_ch_ua_override is not None:
+                    # this could be tricky is a differently cased key of the same thing exists,
+                    # but we have done a case-insensitive check above that precludes this
+                    extra_http_headers["sec-ch-ua"] = sec_ch_ua_override
+                    kwargs["extra_http_headers"] = extra_http_headers
+            page = new_page_method(*args, **kwargs)
+            self.apply_stealth_sync(page)
+            return page
 
         if inspect.iscoroutinefunction(new_page_method):
             return hooked_browser_method_async
         return hooked_browser_method_sync
+
+    def _reassign_new_page_new_context(
+        self,
+        browser_or_context: Union[
+            async_api.BrowserContext, async_api.Browser, sync_api.BrowserContext, sync_api.Browser
+        ],
+    ):
+        if isinstance(browser_or_context, (async_api.BrowserContext, sync_api.BrowserContext)):
+            context: async_api.BrowserContext = browser_or_context
+            context.new_page = self._generate_hooked_new_page(context.new_page)
+        elif isinstance(browser_or_context, (async_api.Browser, sync_api.Browser)):
+            browser: async_api.Browser = browser_or_context
+            browser.new_page = self._generate_hooked_new_page(browser.new_page)
+            browser.new_context = self._generate_hooked_new_context(browser.new_context)
+        else:
+            raise TypeError(f"unexpected type from function (bug): returned {browser_or_context}")
+
+    @staticmethod
+    def _get_greased_chrome_sec_ua_ch(user_agent: str):
+        """
+        From the major version in user_agent, generate a Sec-CH-UA header value. An example of the data in this
+        header can be generated from navigator.userAgentData.brands (requires secure context). We could query that
+        ourselves, but since it requires a secure context, there's no performant way to do that, so instead we
+        re-implement the greasing algorithm from Chrome.
+
+        See Also:
+             https://wicg.github.io/ua-client-hints/#grease
+             https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Sec-CH-UA
+             https://source.chromium.org/chromium/chromium/src/+/main:components/embedder_support/user_agent_utils.cc
+        Args:
+            user_agent: Chrome UA
+
+        Returns:
+            greased Sec-CH-UA header value
+        """
+        greased_versions = [8, 99, 24]
+        greasy_chars = " ():-./;=?_"
+        greasy_brand = f"Not{random.choice(greasy_chars)}A{random.choice(greasy_chars)}Brand"
+        version = re.search(r"Chrome/([\d.]+)", user_agent, re.IGNORECASE)
+        major_version = version.group(1)
+        brands = [
+            ("Chromium", major_version),
+            ("Chrome", major_version),
+            (greasy_brand, random.choice(greased_versions)),
+        ]
+        return ", ".join(f'"{brand}";v="{version}"' for brand, version in brands)
 
     @staticmethod
     def _patch_blink_features_cli_args(existing_args: Optional[List[str]]) -> List[str]:
@@ -372,12 +480,11 @@ class Stealth:
 
 
 ALL_EVASIONS_DISABLED_KWARGS = {
-    "navigator_webdriver": False,
-    "webgl_vendor": False,
     "chrome_app": False,
     "chrome_csi": False,
     "chrome_load_times": False,
     "chrome_runtime": False,
+    "hairline": False,
     "iframe_content_window": False,
     "media_codecs": False,
     "navigator_hardware_concurrency": False,
@@ -387,5 +494,7 @@ ALL_EVASIONS_DISABLED_KWARGS = {
     "navigator_plugins": False,
     "navigator_user_agent": False,
     "navigator_vendor": False,
-    "hairline": False,
+    "navigator_webdriver": False,
+    "sec_ch_ua": False,
+    "webgl_vendor": False,
 }
