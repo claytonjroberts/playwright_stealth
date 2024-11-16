@@ -301,9 +301,11 @@ class Stealth:
         *args and **kwargs even though these methods may not take any number of arguments,
         we want to preserve accurate stack traces when caller passes args improperly
         """
-        browser_instance = new_page_method.__self__
         USER_AGENT_OVERRIDE_PIGGYBACK_KEY = "_stealth_user_agent"
         SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY = "_stealth_sec_ch_ua"
+
+        browser_instance = new_page_method.__self__
+        is_chromium = browser_instance.browser_type.name == "chromium"
 
         async def get_user_agent_and_sec_ch_ua_async(page_method: Callable) -> Tuple[str, str]:
             """
@@ -316,8 +318,8 @@ class Stealth:
                 user_agent, sec_ch_ua
             """
             temp_page: Optional[async_api.Page]
-            stealth_user_agent = getattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY)
-            sec_ch_ua = getattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY)
+            stealth_user_agent = getattr(browser_instance, USER_AGENT_OVERRIDE_PIGGYBACK_KEY, None)
+            sec_ch_ua = getattr(browser_instance, SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY, None)
             if stealth_user_agent is None or sec_ch_ua is None:
                 temp_page = await page_method()
                 stealth_user_agent = (await temp_page.evaluate("navigator.userAgent")).replace(
@@ -345,21 +347,21 @@ class Stealth:
         async def hooked_browser_method_async(*args, **kwargs):
             # respect any override the user passes themselves
             if self.navigator_user_agent and kwargs.get("user_agent") is None:
-                user_agent_override = self.navigator_user_agent_override
-                if user_agent_override is None and browser_instance.browser_type == "chromium":
-                    user_agent_override, _ = await get_user_agent_and_sec_ch_ua_async(new_page_method)
-                kwargs["user_agent"] = self.navigator_user_agent_override
+                resolved_user_agent_override = self.navigator_user_agent_override
+                if resolved_user_agent_override is None and is_chromium:
+                    resolved_user_agent_override, _ = await get_user_agent_and_sec_ch_ua_async(new_page_method)
+                kwargs["user_agent"] = resolved_user_agent_override
 
             extra_http_headers = kwargs.get("extra_http_headers", {})
             # respect any override the user passes themselves
             if self.sec_ch_ua and CaseInsensitiveDict(extra_http_headers).get("sec-ch-ua") is None:
-                sec_ch_ua_override = self.sec_ch_ua_override
-                if sec_ch_ua_override is None and browser_instance.browser_type == "chromium":
-                    _, sec_ch_ua_override = await get_user_agent_and_sec_ch_ua_async(new_page_method)
-                if sec_ch_ua_override is not None:
+                resolved_sec_ch_ua_override = self.sec_ch_ua_override
+                if resolved_sec_ch_ua_override is None and is_chromium:
+                    _, resolved_sec_ch_ua_override = await get_user_agent_and_sec_ch_ua_async(new_page_method)
+                if resolved_sec_ch_ua_override is not None:
                     # this could be tricky is a differently cased key of the same thing exists,
                     # but we have done a case-insensitive check above that precludes this
-                    extra_http_headers["sec-ch-ua"] = sec_ch_ua_override
+                    extra_http_headers["sec-ch-ua"] = resolved_sec_ch_ua_override
                     kwargs["extra_http_headers"] = extra_http_headers
             page = await new_page_method(*args, **kwargs)
             await self.apply_stealth_async(page)
@@ -367,21 +369,21 @@ class Stealth:
 
         def hooked_browser_method_sync(*args, **kwargs):
             if self.navigator_user_agent and kwargs.get("user_agent") is None:
-                user_agent_override = self.navigator_user_agent_override
-                if user_agent_override is None and browser_instance.browser_type == "chromium":
-                    user_agent_override, _ = get_user_agent_and_sec_ch_ua_sync(new_page_method)
+                resolved_user_agent_override = self.navigator_user_agent_override
+                if resolved_user_agent_override is None and is_chromium:
+                    resolved_user_agent_override, _ = get_user_agent_and_sec_ch_ua_sync(new_page_method)
                 kwargs["user_agent"] = self.navigator_user_agent_override
 
             extra_http_headers = kwargs.get("extra_http_headers", {})
             if self.sec_ch_ua and CaseInsensitiveDict(extra_http_headers).get("sec-ch-ua") is None:
-                sec_ch_ua_override = self.sec_ch_ua_override
+                resolved_sec_ch_ua_override = self.sec_ch_ua_override
                 # respect any override the user has already made
-                if sec_ch_ua_override is None and browser_instance.browser_type == "chromium":
-                    _, sec_ch_ua_override = get_user_agent_and_sec_ch_ua_sync(new_page_method)
-                if sec_ch_ua_override is not None:
+                if resolved_sec_ch_ua_override is None and is_chromium:
+                    _, resolved_sec_ch_ua_override = get_user_agent_and_sec_ch_ua_sync(new_page_method)
+                if resolved_sec_ch_ua_override is not None:
                     # this could be tricky is a differently cased key of the same thing exists,
                     # but we have done a case-insensitive check above that precludes this
-                    extra_http_headers["sec-ch-ua"] = sec_ch_ua_override
+                    extra_http_headers["sec-ch-ua"] = resolved_sec_ch_ua_override
                     kwargs["extra_http_headers"] = extra_http_headers
             page = new_page_method(*args, **kwargs)
             self.apply_stealth_sync(page)
@@ -428,7 +430,7 @@ class Stealth:
         greased_versions = [8, 99, 24]
         greasy_chars = " ():-./;=?_"
         greasy_brand = f"Not{random.choice(greasy_chars)}A{random.choice(greasy_chars)}Brand"
-        version = re.search(r"Chrome/([\d.]+)", user_agent, re.IGNORECASE)
+        version = re.search(r"Chrome/(\d+)[\d.]+", user_agent, re.IGNORECASE)
         major_version = version.group(1)
         brands = [
             ("Chromium", major_version),

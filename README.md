@@ -2,13 +2,13 @@
 
 Transplanted from [puppeteer-extra-plugin-stealth](https://github.com/berstend/puppeteer-extra/tree/master/packages/puppeteer-extra-plugin-stealth), with some improvements. Don't expect this to bypass anything but the simplest of bot detection methods. Consider this a proof-of-concept starting point.
 
-This is a WIP fork, with the goal of replacing the out-of-date upstream. See the [changelog](./README.md).
+This is a WIP fork. I've merged some of the outstanding PRs and added some features with the goal of replacing the out-of-date upstream. See the [changelog](./README.md).
 
 ## Install
 
 Install the latest stable release:
 ```
-$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc2
+$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc3
 ```
 or straight from `main`
 ```
@@ -27,6 +27,7 @@ from playwright_stealth import Stealth, ALL_EVASIONS_DISABLED_KWARGS
 async def main():
     # This is the recommended usage. All pages created will have stealth applied:
     async with Stealth().use_async(async_playwright()) as p:
+        # or, to hook every browser launched from this context: stealth.hook_playwright_context(p)
         browser = await p.chromium.launch()
         page = await browser.new_page()
         print("from new_page: ", await page.evaluate("navigator.webdriver"))
@@ -41,8 +42,8 @@ async def main():
         init_scripts_only=True
     )
     async with async_playwright() as p:
-        # or, to hook every browser launched from this context: stealth.hook_playwright_context(p)
         browser = await p.chromium.launch()
+        # this isn't, certain evasions will work worse, and some won't be able to be applied at all
         context = await browser.new_context()
         await stealth.apply_stealth_async(context)
         page_1 = await context.new_page()
