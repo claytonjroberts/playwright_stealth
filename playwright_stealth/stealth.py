@@ -87,6 +87,7 @@ class Stealth:
         navigator_platform_override: Optional[str] = None,
         navigator_user_agent_override: Optional[str] = None,
         navigator_vendor_override: str = "Google Inc.",
+        sec_ch_ua_override: Optional[str] = None,
         webgl_renderer_override: str = "Intel Iris OpenGL Engine",
         webgl_vendor_override: str = "Intel Inc.",
         init_scripts_only: bool = False,
