@@ -43,7 +43,7 @@ async def main():
     )
     async with async_playwright() as p:
         browser = await p.chromium.launch()
-        # this isn't, certain evasions will work worse, and some won't be able to be applied at all
+        # this isn't recommended, certain evasions will work worse, and some won't be able to be applied at all
         context = await browser.new_context()
         await stealth.apply_stealth_async(context)
         page_1 = await context.new_page()
