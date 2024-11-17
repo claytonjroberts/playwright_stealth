@@ -8,7 +8,7 @@ This is a WIP fork. I've merged some of the outstanding PRs and added some featu
 
 Install the latest stable release:
 ```
-$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc3
+$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc4
 ```
 or straight from `main`
 ```
