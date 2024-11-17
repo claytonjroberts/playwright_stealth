@@ -41,7 +41,7 @@ async def main():
 asyncio.run(main())
 ```
 
-## Specifying config options and applying evasions manually to an entire context:
+### Specifying config options and applying evasions manually to an entire context
 ```python
 import asyncio
 from playwright.async_api import async_playwright
