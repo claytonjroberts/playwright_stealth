@@ -61,8 +61,10 @@ async def main():
 
 asyncio.run(main())
 ```
-A set of 
-## Test results
+## Todo
+ - make this work with playwright.launch_persistent_context
+
+## A set of Test results
 
 ### playwright with stealth
 
