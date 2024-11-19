@@ -82,6 +82,7 @@ asyncio.run(advanced_example())
 ## Todo
  - make this work with playwright.launch_persistent_context
  - sec-platform (we have navigator_play)
+ - docs
 
 ## A set of Test results
 
