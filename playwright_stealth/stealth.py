@@ -85,7 +85,6 @@ class Stealth:
         navigator_webdriver: bool = True,
         sec_ch_ua: bool = True,
         webgl_vendor: bool = True,
-        chrome_runtime_run_on_insecure_origins: bool = False,
         navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
         navigator_platform_override: Optional[str] = None,
         navigator_user_agent_override: Optional[str] = None,
@@ -116,8 +115,7 @@ class Stealth:
         self.webgl_vendor: bool = webgl_vendor
 
         # evasion options
-        self.chrome_runtime_run_on_insecure_origins: Optional[bool] = chrome_runtime_run_on_insecure_origins
-        self.navigator_languages_override: Tuple[str, str] = navigator_languages_override
+        self.navigator_languages_override: Tuple[str, str] = navigator_languages_override or ("en-US", "en")
         self.navigator_platform_override: Optional[str] = navigator_platform_override
         self.navigator_user_agent_override: Optional[str] = navigator_user_agent_override
         self.navigator_vendor_override: str = navigator_vendor_override

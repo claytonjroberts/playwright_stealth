@@ -10,3 +10,4 @@
  - fix: navigator_platform typo (#1)
  - ft: better type hinted functions
  - ft: User-Agent and Sec-CH-UA spoofing
+ - chore: remove chrome.run_on_unsecure_origins option (didn't see a purpose)
