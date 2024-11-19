@@ -121,7 +121,11 @@ class Stealth:
         self.navigator_platform_override: Optional[str] = navigator_platform_override
         self.navigator_user_agent_override: Optional[str] = navigator_user_agent_override
         self.navigator_vendor_override: str = navigator_vendor_override or None
-        self.sec_ch_ua_override: Optional[str] = sec_ch_ua_override
+        if sec_ch_ua_override is None and self.navigator_user_agent_override is not None:
+            # we can get sec_ch_ua override for "free" here if we can parse the Chrome version string
+            self.sec_ch_ua_override = self._get_greased_chrome_sec_ua_ch(self.navigator_user_agent_override)
+        else:
+            self.sec_ch_ua_override: Optional[str] = sec_ch_ua_override
         self.webgl_renderer_override: str = webgl_renderer_override or "Intel Iris OpenGL Engine"
         self.webgl_vendor_override: str = webgl_vendor_override or "Intel Inc."
         # other options
@@ -436,7 +440,7 @@ class Stealth:
             raise TypeError(f"unexpected type from function (bug): returned {browser}")
 
     @staticmethod
-    def _get_greased_chrome_sec_ua_ch(user_agent: str):
+    def _get_greased_chrome_sec_ua_ch(user_agent: str) -> Optional[str]:
         """
         From the major version in user_agent, generate a Sec-CH-UA header value. An example of the data in this
         header can be generated from navigator.userAgentData.brands (requires secure context). We could query that
@@ -451,20 +455,23 @@ class Stealth:
             user_agent: Chrome UA
 
         Returns:
-            greased Sec-CH-UA header value
+            greased Sec-CH-UA header value, None if the Chrome version cannot be parsed
         """
         greased_versions = [8, 99, 24]
         greasy_chars = " ():-./;=?_"
         greasy_brand = f"Not{random.choice(greasy_chars)}A{random.choice(greasy_chars)}Brand"
         version = re.search(r"Chrome/(\d+)[\d.]+", user_agent, re.IGNORECASE)
+        if len(version.groups()) == 0:
+            return None
         major_version = version.group(1)
         brands = [
             ("Chromium", major_version),
             ("Chrome", major_version),
             (greasy_brand, random.choice(greased_versions)),
         ]
+        random.shuffle(brands)
         return ", ".join(f'"{brand}";v="{version}"' for brand, version in brands)
-
+        
     @staticmethod
     def _patch_blink_features_cli_args(existing_args: Optional[List[str]]) -> List[str]:
         """Patches CLI args list to disable AutomationControlled blink feature, while preserving other args"""
