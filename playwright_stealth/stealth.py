@@ -66,34 +66,34 @@ class Stealth:
     _SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY = "_stealth_sec_ch_ua"
 
     def __init__(
-        self,
-        *,
-        chrome_app: bool = True,
-        chrome_csi: bool = True,
-        chrome_load_times: bool = True,
-        chrome_runtime: bool = False,
-        hairline: bool = True,
-        iframe_content_window: bool = True,
-        media_codecs: bool = True,
-        navigator_hardware_concurrency: bool = True,
-        navigator_languages: bool = True,
-        navigator_permissions: bool = True,
-        navigator_platform: bool = True,
-        navigator_plugins: bool = True,
-        navigator_user_agent: bool = True,
-        navigator_vendor: bool = True,
-        navigator_webdriver: bool = True,
-        sec_ch_ua: bool = True,
-        webgl_vendor: bool = True,
-        navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
-        navigator_platform_override: Optional[str] = None,
-        navigator_user_agent_override: Optional[str] = None,
-        navigator_vendor_override: str = "Google Inc.",
-        sec_ch_ua_override: Optional[str] = None,
-        webgl_renderer_override: str = "Intel Iris OpenGL Engine",
-        webgl_vendor_override: str = "Intel Inc.",
-        init_scripts_only: bool = False,
-        script_logging: bool = False,
+            self,
+            *,
+            chrome_app: bool = True,
+            chrome_csi: bool = True,
+            chrome_load_times: bool = True,
+            chrome_runtime: bool = False,
+            hairline: bool = True,
+            iframe_content_window: bool = True,
+            media_codecs: bool = True,
+            navigator_hardware_concurrency: bool = True,
+            navigator_languages: bool = True,
+            navigator_permissions: bool = True,
+            navigator_platform: bool = True,
+            navigator_plugins: bool = True,
+            navigator_user_agent: bool = True,
+            navigator_vendor: bool = True,
+            navigator_webdriver: bool = True,
+            sec_ch_ua: bool = True,
+            webgl_vendor: bool = True,
+            navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
+            navigator_platform_override: Optional[str] = None,
+            navigator_user_agent_override: Optional[str] = None,
+            navigator_vendor_override: str = None,
+            sec_ch_ua_override: Optional[str] = None,
+            webgl_renderer_override: str = None,
+            webgl_vendor_override: str = None,
+            init_scripts_only: bool = False,
+            script_logging: bool = False,
     ):
         # scripts to load
         self.chrome_app: bool = chrome_app
@@ -114,14 +114,16 @@ class Stealth:
         self.sec_ch_ua: bool = sec_ch_ua
         self.webgl_vendor: bool = webgl_vendor
 
+        # warn if an override was provided for a disabled option
+        self._check_for_disabled_options_overridden(locals())
         # evasion options
         self.navigator_languages_override: Tuple[str, str] = navigator_languages_override or ("en-US", "en")
         self.navigator_platform_override: Optional[str] = navigator_platform_override
         self.navigator_user_agent_override: Optional[str] = navigator_user_agent_override
-        self.navigator_vendor_override: str = navigator_vendor_override
+        self.navigator_vendor_override: str = navigator_vendor_override or None
         self.sec_ch_ua_override: Optional[str] = sec_ch_ua_override
-        self.webgl_renderer_override: str = webgl_renderer_override
-        self.webgl_vendor_override: str = webgl_vendor_override
+        self.webgl_renderer_override: str = webgl_renderer_override or "Intel Iris OpenGL Engine"
+        self.webgl_vendor_override: str = webgl_vendor_override or "Intel Inc."
         # other options
         self.init_scripts_only: bool = init_scripts_only
         self.script_logging = script_logging
@@ -140,7 +142,6 @@ class Stealth:
     @property
     def options_payload(self) -> str:
         opts = {
-            "chrome_runtime_run_on_insecure_origins": self.chrome_runtime_run_on_insecure_origins,
             "navigator_hardware_concurrency": self.navigator_hardware_concurrency,
             "navigator_languages_override": self.navigator_languages_override,
             "navigator_platform": self.navigator_platform_override,
@@ -241,7 +242,7 @@ class Stealth:
                     setattr(browser_type, name, hooked_method)
 
     def _kwargs_with_patched_cli_arg(
-        self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool
+            self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool
     ) -> Dict[str, Any]:
         signature = inspect.signature(method).parameters
         args_parameter = signature.get("args")
@@ -332,7 +333,7 @@ class Stealth:
         return hooked_new_page_sync
 
     async def _kwargs_new_page_context_with_patches_async(
-        self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
+            self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         This returns kwargs with arguments added based on enabled evasions, while respecting any kwargs the caller
@@ -387,7 +388,7 @@ class Stealth:
         return new_kwargs
 
     def _kwargs_new_page_context_with_patches_sync(
-        self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
+            self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """see self._kwargs_new_page_context_with_patches_async for docs."""
         browser_or_context = unpatched_new_page.__self__
@@ -505,6 +506,13 @@ class Stealth:
             # none of the existing switches overlap with the one we're trying to set
             new_args.append(flag)
         return new_args
+
+    @staticmethod
+    def _check_for_disabled_options_overridden(packed_kwargs: Dict[str, Any]) -> None:
+        for key in ALL_EVASIONS_DISABLED_KWARGS.keys():
+            if not packed_kwargs.get(key) and packed_kwargs.get(f"{key}_override") is not None:
+                warnings.warn(f"{key} is False, but an override ({key}_override) was provided, "
+                              f"which is probably not what you intended to do", stacklevel=3)
 
 
 ALL_EVASIONS_DISABLED_KWARGS = {
