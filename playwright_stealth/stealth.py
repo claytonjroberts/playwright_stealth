@@ -86,7 +86,7 @@ class Stealth:
             sec_ch_ua: bool = True,
             webgl_vendor: bool = True,
             navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
-            navigator_platform_override: Optional[str] = None,
+            navigator_platform_override: str = "Win32",
             navigator_user_agent_override: Optional[str] = None,
             navigator_vendor_override: str = None,
             sec_ch_ua_override: Optional[str] = None,
