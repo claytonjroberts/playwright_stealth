@@ -2,17 +2,13 @@
 
 Transplanted from [puppeteer-extra-plugin-stealth](https://github.com/berstend/puppeteer-extra/tree/master/packages/puppeteer-extra-plugin-stealth), with some improvements. Don't expect this to bypass anything but the simplest of bot detection methods. Consider this a proof-of-concept starting point.
 
-This is a WIP fork. I've merged some of the outstanding PRs and added some features with the goal of replacing the out-of-date upstream. See the [changelog](./README.md).
+This is a fork from AtuboDad's port. I've merged some of the outstanding PRs, added some features, and cleaned up the API surface. See the [changelog](./CHANGELOG.md). The latest major version includes breaking changes.
 
 ## Install
 
-Install the latest stable release:
+Install from PyPi:
 ```
-$ pip install git+https://github.com/Mattwmaster58/playwright_stealth@rc4
-```
-or straight from `main`
-```
-$ pip install git+https://github.com/Mattwmaster58/playwright_stealth
+$ pip install playwright-stealth
 ```
 
 ## Example Usage
@@ -81,7 +77,8 @@ asyncio.run(advanced_example())
 
 ## Todo
  - make this work with playwright.launch_persistent_context
- - sec-platform (we have navigator_play)
+   - the difficult because sometimes we sniff the UA if an override isn't provided, and this is difficult to do when launch_persistent_context is launched
+ - sec-platform (we have navigator_platform)
  - docs
 
 ## A set of Test results
