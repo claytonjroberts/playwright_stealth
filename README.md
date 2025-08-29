@@ -6,7 +6,7 @@ with some improvements. Don't expect this to bypass anything but the simplest of
 proof-of-concept starting point.
 
 I've merged some of the outstanding PRs, added some features, and cleaned up the API surface. See
-the [changelog](./CHANGELOG.md). The latest major version includes breaking changes.
+the [changelog](https://github.com/Mattwmaster58/playwright_stealth/blob/main/CHANGELOG.md). The latest major version includes breaking changes.
 
 ## Install
 

@@ -17,10 +17,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.9"
 playwright = "^1.0.0"
-
+black = "^25.1.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^25.1.0"
 pytest = "^8.4.0"
 pytest-asyncio = "^1.0.0"
 

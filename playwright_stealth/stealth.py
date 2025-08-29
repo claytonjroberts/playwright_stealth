@@ -66,34 +66,34 @@ class Stealth:
     _SEC_CH_UA_OVERRIDE_PIGGYBACK_KEY = "_stealth_sec_ch_ua"
 
     def __init__(
-            self,
-            *,
-            chrome_app: bool = True,
-            chrome_csi: bool = True,
-            chrome_load_times: bool = True,
-            chrome_runtime: bool = False,
-            hairline: bool = True,
-            iframe_content_window: bool = True,
-            media_codecs: bool = True,
-            navigator_hardware_concurrency: bool = True,
-            navigator_languages: bool = True,
-            navigator_permissions: bool = True,
-            navigator_platform: bool = True,
-            navigator_plugins: bool = True,
-            navigator_user_agent: bool = True,
-            navigator_vendor: bool = True,
-            navigator_webdriver: bool = True,
-            sec_ch_ua: bool = True,
-            webgl_vendor: bool = True,
-            navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
-            navigator_platform_override: str = "Win32",
-            navigator_user_agent_override: Optional[str] = None,
-            navigator_vendor_override: str = None,
-            sec_ch_ua_override: Optional[str] = None,
-            webgl_renderer_override: str = None,
-            webgl_vendor_override: str = None,
-            init_scripts_only: bool = False,
-            script_logging: bool = False,
+        self,
+        *,
+        chrome_app: bool = True,
+        chrome_csi: bool = True,
+        chrome_load_times: bool = True,
+        chrome_runtime: bool = False,
+        hairline: bool = True,
+        iframe_content_window: bool = True,
+        media_codecs: bool = True,
+        navigator_hardware_concurrency: bool = True,
+        navigator_languages: bool = True,
+        navigator_permissions: bool = True,
+        navigator_platform: bool = True,
+        navigator_plugins: bool = True,
+        navigator_user_agent: bool = True,
+        navigator_vendor: bool = True,
+        navigator_webdriver: bool = True,
+        sec_ch_ua: bool = True,
+        webgl_vendor: bool = True,
+        navigator_languages_override: Tuple[str, str] = ("en-US", "en"),
+        navigator_platform_override: str = "Win32",
+        navigator_user_agent_override: Optional[str] = None,
+        navigator_vendor_override: str = None,
+        sec_ch_ua_override: Optional[str] = None,
+        webgl_renderer_override: str = None,
+        webgl_vendor_override: str = None,
+        init_scripts_only: bool = False,
+        script_logging: bool = False,
     ):
         # scripts to load
         self.chrome_app: bool = chrome_app
@@ -246,7 +246,7 @@ class Stealth:
                     setattr(browser_type, name, hooked_method)
 
     def _kwargs_with_patched_cli_arg(
-            self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool
+        self, method: Callable, packed_kwargs: Dict[str, Any], chromium_mode: bool
     ) -> Dict[str, Any]:
         signature = inspect.signature(method).parameters
         args_parameter = signature.get("args")
@@ -337,7 +337,7 @@ class Stealth:
         return hooked_new_page_sync
 
     async def _kwargs_new_page_context_with_patches_async(
-            self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
+        self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
         This returns kwargs with arguments added based on enabled evasions, while respecting any kwargs the caller
@@ -392,7 +392,7 @@ class Stealth:
         return new_kwargs
 
     def _kwargs_new_page_context_with_patches_sync(
-            self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
+        self, unpatched_new_page: Callable, packed_kwargs: Dict[str, Any]
     ) -> Dict[str, Any]:
         """see self._kwargs_new_page_context_with_patches_async for docs."""
         browser_or_context = unpatched_new_page.__self__
@@ -518,8 +518,11 @@ class Stealth:
     def _check_for_disabled_options_overridden(packed_kwargs: Dict[str, Any]) -> None:
         for key in ALL_EVASIONS_DISABLED_KWARGS.keys():
             if not packed_kwargs.get(key) and packed_kwargs.get(f"{key}_override") is not None:
-                warnings.warn(f"{key} is False, but an override ({key}_override) was provided, "
-                              f"which is probably not what you intended to do", stacklevel=3)
+                warnings.warn(
+                    f"{key} is False, but an override ({key}_override) was provided, "
+                    f"which is probably not what you intended to do",
+                    stacklevel=3,
+                )
 
 
 ALL_EVASIONS_DISABLED_KWARGS = {
