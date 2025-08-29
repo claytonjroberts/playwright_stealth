@@ -10,7 +10,7 @@ const utils = {};
  * @param {object} handler - The JS Proxy handler to wrap
  */
 utils.stripProxyFromErrors = (handler = {}) => {
-  let handler_name = (Math.random() + 1).toString(36).substring(15);
+  const handler_name = (Math.random() + 1).toString(36).substring(2);
   window[handler_name] = {}
   // We wrap each trap in the handler in a try/catch and modify the error stack if they throw
   const traps = Object.getOwnPropertyNames(handler);
