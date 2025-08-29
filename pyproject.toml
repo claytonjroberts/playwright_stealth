@@ -14,6 +14,10 @@ classifiers = [
 license = "MIT"
 readme = "README.md"
 
+[project.urls]
+homepage = "https://github.com/Mattwmaster58/playwright_stealth"
+changelog = "https://github.com/Mattwmaster58/playwright_stealth/raw/main/CHANGELOG.md"
+
 [tool.poetry.dependencies]
 python = "^3.9"
 playwright = "^1.0.0"

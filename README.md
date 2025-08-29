@@ -98,8 +98,8 @@ asyncio.run(advanced_example())
 
 ### playwright with stealth
 
-![playwright without stealth](./images/example_with_stealth.png)
+![playwright without stealth](https://github.com/Mattwmaster58/playwright_stealth/blob/main/images/example_with_stealth.png)
 
 ### playwright without stealth
 
-![playwright with stealth](./images/example_without_stealth.png)
+![playwright with stealth](https://github.com/Mattwmaster58/playwright_stealth/raw/main/images/example_without_stealth.png)
