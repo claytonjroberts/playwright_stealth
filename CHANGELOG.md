@@ -1,4 +1,4 @@
-2.0.0
+# 2.0.0
 
 - __breaking change__: more consistent naming all around
 - __breaking change__: Stealth object only takes kwargs now
