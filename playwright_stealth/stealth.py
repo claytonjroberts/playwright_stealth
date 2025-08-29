@@ -471,7 +471,7 @@ class Stealth:
         ]
         random.shuffle(brands)
         return ", ".join(f'"{brand}";v="{version}"' for brand, version in brands)
-        
+
     @staticmethod
     def _patch_blink_features_cli_args(existing_args: Optional[List[str]]) -> List[str]:
         """Patches CLI args list to disable AutomationControlled blink feature, while preserving other args"""

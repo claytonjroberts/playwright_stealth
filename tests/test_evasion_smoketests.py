@@ -3,6 +3,7 @@ from playwright.async_api import async_playwright
 
 from playwright_stealth import Stealth
 
+
 # todo: more rigorous testing
 # these tests aren't useless, because they do actually call injected getters which may eg crash
 # but we should probably test they return the values they are supposed to

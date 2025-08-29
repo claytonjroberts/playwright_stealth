@@ -9,7 +9,7 @@ class AsyncWrappingContextManager:
         self.manager = manager
 
     async def __aenter__(
-        self,
+            self,
     ) -> async_api.Playwright:
         context = await self.manager.__aenter__()
         self.stealth.hook_playwright_context(context)
@@ -27,7 +27,7 @@ class SyncWrappingContextManager:
         self.manager = manager
 
     def __enter__(
-        self,
+            self,
     ) -> sync_api.Playwright:
         context = self.manager.__enter__()
         self.stealth.hook_playwright_context(context)
