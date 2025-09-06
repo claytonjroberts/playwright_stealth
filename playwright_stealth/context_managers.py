@@ -11,9 +11,7 @@ if TYPE_CHECKING:
 class AsyncWrappingContextManager:
     def __init__(self, stealth: "Stealth", manager: async_api.PlaywrightContextManager):
         if isinstance(manager, sync_api.PlaywrightContextManager):
-            raise TypeError(
-                "You need to call 'use_sync' instead of 'use_async' for a sync Playwright context"
-            )
+            raise TypeError("You need to call 'use_sync' instead of 'use_async' for a sync Playwright context")
         self.stealth = stealth
         self.manager = manager
 
@@ -31,9 +29,7 @@ class AsyncWrappingContextManager:
 class SyncWrappingContextManager:
     def __init__(self, stealth: "Stealth", manager: sync_api.PlaywrightContextManager):
         if isinstance(manager, async_api.PlaywrightContextManager):
-            raise TypeError(
-                "You need to call 'use_async' instead of 'use_sync' for an async Playwright context"
-            )
+            raise TypeError("You need to call 'use_async' instead of 'use_sync' for an async Playwright context")
         self.stealth = stealth
         self.manager = manager
 

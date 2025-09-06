@@ -16,9 +16,7 @@ SCRIPTS: Dict[str, str] = {
     "chrome_runtime": from_file("evasions/chrome.runtime.js"),
     "iframe_content_window": from_file("evasions/iframe.contentWindow.js"),
     "media_codecs": from_file("evasions/media.codecs.js"),
-    "navigator_hardware_concurrency": from_file(
-        "evasions/navigator.hardwareConcurrency.js"
-    ),
+    "navigator_hardware_concurrency": from_file("evasions/navigator.hardwareConcurrency.js"),
     "navigator_languages": from_file("evasions/navigator.languages.js"),
     "navigator_permissions": from_file("evasions/navigator.permissions.js"),
     "navigator_platform": from_file("evasions/navigator.platform.js"),
