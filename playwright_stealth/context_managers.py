@@ -1,10 +1,19 @@
+from typing import TYPE_CHECKING
+
 from playwright import async_api, sync_api
+
+if TYPE_CHECKING:
+    from .stealth import Stealth
+
+# pyright: reportPrivateImportUsage=false
 
 
 class AsyncWrappingContextManager:
     def __init__(self, stealth: "Stealth", manager: async_api.PlaywrightContextManager):
         if isinstance(manager, sync_api.PlaywrightContextManager):
-            raise TypeError("You need to call 'use_sync' instead of 'use_async' for a sync Playwright context")
+            raise TypeError(
+                "You need to call 'use_sync' instead of 'use_async' for a sync Playwright context"
+            )
         self.stealth = stealth
         self.manager = manager
 
@@ -22,7 +31,9 @@ class AsyncWrappingContextManager:
 class SyncWrappingContextManager:
     def __init__(self, stealth: "Stealth", manager: sync_api.PlaywrightContextManager):
         if isinstance(manager, async_api.PlaywrightContextManager):
-            raise TypeError("You need to call 'use_async' instead of 'use_sync' for an async Playwright context")
+            raise TypeError(
+                "You need to call 'use_async' instead of 'use_sync' for an async Playwright context"
+            )
         self.stealth = stealth
         self.manager = manager
 
@@ -35,3 +46,6 @@ class SyncWrappingContextManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.manager.__exit__(exc_type, exc_val, exc_tb)
+
+
+__all__ = ["AsyncWrappingContextManager", "SyncWrappingContextManager"]
