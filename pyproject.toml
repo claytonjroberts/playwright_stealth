@@ -3,6 +3,7 @@ name = "playwright-stealth"
 version = "2.0.0"
 description = "Make your playwright instance stealthy"
 authors = [
+<<<<<<< HEAD
     { name = "AtuboDad", email = "lcjasas@sina.com" },
     { name = "Mattwmaster58", email = "mattwmaster58@gmail.com" },
 ]
@@ -15,17 +16,50 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 dependencies = ["playwright>=1.0.0,<2", "black>=25.1.0,<26"]
+=======
+    {name="AtuboDad", email="lcjasas@sina.com"},
+    {name="Mattwmaster58", email="mattwmaster58@gmail.com>"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "playwright (>=1.40.0)"
+]
+
+dynamic = [ "classifiers" ]
+
+[tool.poetry]
+classifiers = [
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+>>>>>>> cdb941f656a6395dfcb65c2a804e0a8631f1446b
 
 [project.urls]
 homepage = "https://github.com/Mattwmaster58/playwright_stealth"
 changelog = "https://github.com/Mattwmaster58/playwright_stealth/raw/main/CHANGELOG.md"
 
+<<<<<<< HEAD
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = ["pytest>=8.4.0,<9", "pytest-asyncio>=1.0.0,<2"]
+=======
+[project.optional-dependencies]
+black = ["black >= 25.9.0"]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.4.2"
+pytest-asyncio = "^1.2.0"
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+>>>>>>> cdb941f656a6395dfcb65c2a804e0a8631f1446b
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
@@ -34,7 +68,10 @@ log_cli = true
 
 [tool.black]
 line-length = 120
+<<<<<<< HEAD
 
 [tool.ruff]
 line-length = 120
 exclude = ["tests/*"]
+=======
+>>>>>>> cdb941f656a6395dfcb65c2a804e0a8631f1446b
